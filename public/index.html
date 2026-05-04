@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber-Remote</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        body {
+            background: #0f0f0f;
+            color: #00ff41;
+            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        /* Swipe Area */
+        #gesture-zone {
+            flex: 1;
+            border: 2px dashed #00ff41;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        /* Terminal Area */
+        #terminal {
+            height: 40%;
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 10px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #output {
+            flex: 1;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+            white-space: pre-wrap;
+        }
+
+        #input-area {
+            display: flex;
+            border-top: 1px solid #333;
+            padding-top: 10px;
+        }
+
+        input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #00ff41;
+            font-family: inherit;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        .prompt { margin-right: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="gesture-zone">
+        Swipe Left/Right<br>to switch apps
+    </div>
+
+    <div id="terminal">
+        <div id="output">Welcome to Cyber-Remote v1.0...
+System ready.</div>
+        <div id="input-area">
+            <span class="prompt">></span>
+            <input type="text" id="cmd-input" placeholder="Type command..." autocomplete="off">
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+        const input = document.getElementById('cmd-input');
+        const output = document.getElementById('output');
+        const zone = document.getElementById('gesture-zone');
+
+        // --- Gestures ---
+        let touchStart = 0;
+        zone.addEventListener('touchstart', e => {
+            touchStart = e.changedTouches[0].screenX;
+        });
+
+        zone.addEventListener('touchend', e => {
+            let touchEnd = e.changedTouches[0].screenX;
+            if (touchEnd < touchStart - 50) socket.emit('switch-app', 'right'); // Swipe Left -> Next
+            if (touchEnd > touchStart + 50) socket.emit('switch-app', 'left');  // Swipe Right -> Prev
+        });
+
+        // --- Terminal ---
+        input.addEventListener('keypress', e => {
+            if (e.key === 'Enter') {
+                const cmd = input.value;
+                output.innerText += '\n> ' + cmd;
+                socket.emit('terminal-cmd', cmd);
+                input.value = '';
+            }
+        });
+
+        socket.on('terminal-res', data => {
+            output.innerText += '\n' + data;
+            output.scrollTop = output.scrollHeight;
+        });
+    </script>
+</body>
+</html>

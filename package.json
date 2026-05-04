@@ -1,0 +1,11 @@
+{
+  "name": "laptop-remote-dashboard",
+  "version": "1.0.0",
+  "description": "Custom remote control dashboard for Windows 11",
+  "main": "server.js",
+  "dependencies": {
+    "express": "^4.18.2",
+    "socket.io": "^4.7.2",
+    "node-powershell": "^5.0.1"
+  }
+}
