@@ -69,12 +69,41 @@
         }
 
         .prompt { margin-right: 10px; }
+
+        /* Window Switcher CSS */
+        #window-switcher {
+            margin-bottom: 20px;
+            overflow-x: auto;
+            white-space: nowrap;
+            padding-bottom: 10px;
+        }
+
+        .window-card {
+            display: inline-block;
+            width: 120px;
+            height: 80px;
+            background: #1a1a1a;
+            border: 1px solid #00ff41;
+            border-radius: 8px;
+            margin-right: 10px;
+            padding: 10px;
+            font-size: 0.7rem;
+            vertical-align: top;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: normal;
+        }
     </style>
 </head>
 <body>
 
     <div id="gesture-zone">
         Swipe Left/Right<br>to switch apps
+    </div>
+
+    <!-- New: Visual Window Switcher -->
+    <div id="window-switcher">
+        <div id="window-tray"></div>
     </div>
 
     <div id="terminal">
@@ -118,6 +147,27 @@ System ready.</div>
             output.innerText += '\n' + data;
             output.scrollTop = output.scrollHeight;
         });
+
+        // --- Window Switcher ---
+        const tray = document.getElementById('window-tray');
+        
+        function refreshWindows() {
+            socket.emit('get-windows');
+        }
+
+        socket.on('windows-list', titles => {
+            tray.innerHTML = '';
+            titles.forEach(title => {
+                const card = document.createElement('div');
+                card.className = 'window-card';
+                card.innerText = title;
+                tray.appendChild(card);
+            });
+        });
+
+        // Refresh every 5 seconds
+        setInterval(refreshWindows, 5000);
+        refreshWindows();
     </script>
 </body>
 </html>

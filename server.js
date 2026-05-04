@@ -27,6 +27,19 @@ io.on('connection', (socket) => {
       socket.emit('terminal-res', stdout || stderr);
     });
   });
+
+  // Fetch active windows for visual switcher
+  socket.on('get-windows', () => {
+    const psCommand = `powershell -Command "Get-Process | Where-Object {$_.MainWindowTitle} | Select-Object MainWindowTitle"`;
+    exec(psCommand, (error, stdout, stderr) => {
+      if (stdout) {
+        const titles = stdout.split('\n')
+          .map(line => line.trim())
+          .filter(line => line && !line.startsWith('MainWindowTitle') && !line.startsWith('---'));
+        socket.emit('windows-list', titles);
+      }
+    });
+  });
 });
 
 const PORT = 3000;
