@@ -93,6 +93,42 @@
             text-overflow: ellipsis;
             white-space: normal;
         }
+
+        /* File Transfer CSS */
+        #file-transfer {
+            margin-top: 20px;
+            padding: 10px;
+            background: #1a1a1a;
+            border-radius: 10px;
+        }
+
+        button {
+            background: #00ff41;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-family: inherit;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        #file-list {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            padding: 5px 0;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .file-item a { color: #00ff41; text-decoration: none; }
     </style>
 </head>
 <body>
@@ -113,6 +149,13 @@ System ready.</div>
             <span class="prompt">></span>
             <input type="text" id="cmd-input" placeholder="Type command..." autocomplete="off">
         </div>
+    </div>
+
+    <!-- New: File Transfer Area -->
+    <div id="file-transfer">
+        <input type="file" id="file-input" style="display: none">
+        <button onclick="document.getElementById('file-input').click()">Upload File</button>
+        <div id="file-list"></div>
     </div>
 
     <script>
@@ -168,6 +211,39 @@ System ready.</div>
         // Refresh every 5 seconds
         setInterval(refreshWindows, 5000);
         refreshWindows();
+
+        // --- File Transfers ---
+        const fileInput = document.getElementById('file-input');
+        const fileList = document.getElementById('file-list');
+
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', { method: 'POST', body: formData })
+                .then(res => res.text())
+                .then(msg => {
+                    alert(msg);
+                    loadFiles();
+                });
+        });
+
+        function loadFiles() {
+            fetch('/files')
+                .then(res => res.json())
+                .then(files => {
+                    fileList.innerHTML = '';
+                    files.forEach(file => {
+                        const div = document.createElement('div');
+                        div.className = 'file-item';
+                        div.innerHTML = `<span>${file}</span> <a href="/download/${file}" download>Download</a>`;
+                        fileList.appendChild(div);
+                    });
+                });
+        }
+
+        loadFiles();
     </script>
 </body>
 </html>

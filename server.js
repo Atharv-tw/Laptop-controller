@@ -1,11 +1,35 @@
 const express = require('express');
+const { exec } = require('child_process');
+const path = require('path');
+const multer = require('multer');
+const fs = require('fs');
+
 const app = express();
 const http = require('http').Server(app);
 const io = require('socket.io')(http);
-const { exec } = require('child_process');
-const path = require('path');
+
+// File Transfer Setup
+const uploadDir = path.join(__dirname, 'transfers');
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir);
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, uploadDir),
+  filename: (req, file, cb) => cb(null, file.originalname)
+});
+const upload = multer({ storage });
 
 app.use(express.static('public'));
+app.use('/download', express.static(uploadDir));
+
+app.post('/upload', upload.single('file'), (req, res) => {
+  res.send('File uploaded successfully');
+});
+
+app.get('/files', (req, res) => {
+  fs.readdir(uploadDir, (err, files) => {
+    res.json(files);
+  });
+});
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
